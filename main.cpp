@@ -6,11 +6,12 @@ See LICENSE.TXT*/
 
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 #include <gl\gl.h>
-#include <gl\glut.h>
+#include <GL\glut.h>
 #include <GL\glu.h>
 
 #include "tga.h"
@@ -35,6 +36,8 @@ SolarSystem solarSystem;
 
 // The instance of the camera
 Camera camera;
+std::vector<Camera> cameraIdentity;
+int cameraIndex = 0;
 
 // These control the simulation of time
 double time;
@@ -73,6 +76,8 @@ void addMoon()
 
 void init(void)
 {
+	cameraIdentity.push_back(camera);
+
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_TEXTURE_2D);
@@ -160,11 +165,65 @@ void display(void)
 	time += timeSpeed;
 	solarSystem.calculatePositions(time);
 
-	if (controls.forward) camera.forward();		if (controls.backward) camera.backward();
-	if (controls.left) camera.left();			if (controls.right) camera.right();
-	if (controls.yawLeft) camera.yawLeft();		if (controls.yawRight) camera.yawRight();
-	if (controls.rollLeft) camera.rollLeft();	if (controls.rollRight) camera.rollRight();
-	if (controls.pitchUp) camera.pitchUp();		if (controls.pitchDown) camera.pitchDown();
+	if (controls.forward)
+	{
+		cameraIdentity.push_back(Camera::forward(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+	
+	if (controls.backward)
+	{
+		cameraIdentity.push_back(Camera::backward(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.left)
+	{
+		cameraIdentity.push_back(Camera::left(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.right)
+	{
+		cameraIdentity.push_back(Camera::right(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.yawLeft)
+	{
+		cameraIdentity.push_back(Camera::yawLeft(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.yawRight)
+	{
+		cameraIdentity.push_back(Camera::yawRight(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.rollLeft)
+	{
+		cameraIdentity.push_back(Camera::rollLeft(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.rollRight)
+	{
+		cameraIdentity.push_back(Camera::rollRight(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.pitchUp)
+	{
+		cameraIdentity.push_back(Camera::pitchUp(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
+
+	if (controls.pitchDown)
+	{
+		cameraIdentity.push_back(Camera::pitchDown(cameraIdentity[cameraIndex]));
+		cameraIndex++;
+	}
 
 	// clear the buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -180,14 +239,14 @@ void display(void)
 	
 
 	// perform the camera orientation transform
-	camera.transformOrientation();
+	cameraIdentity[cameraIndex].transformOrientation();
 
 	// draw the skybox
 	glBindTexture(GL_TEXTURE_2D, stars->getTextureHandle());
 	drawCube();
 
 	// perform the camera translation transform
-	camera.transformTranslation();
+	cameraIdentity[cameraIndex].transformTranslation();
 
 	
 	
@@ -237,8 +296,8 @@ void keyDown(unsigned char key, int x, int y)
 		// point at the specified planet
 		float vec[3];
 		solarSystem.getPlanetPosition(key - '0', vec);
-		camera.pointAt(vec);
-
+		cameraIdentity.push_back(camera.pointAt(vec, cameraIdentity[cameraIndex]));
+		cameraIndex++;
 		// select that planet
 		planetSelected = key - '0';
 	}
@@ -269,12 +328,18 @@ void keyDown(unsigned char key, int x, int y)
 		planetSizeScale = distanceScale;
 		break;
 	case ',':
-		camera.slowDown(); // slow down camera
+	{
+		cameraIdentity.push_back(Camera::slowDown(cameraIdentity[cameraIndex]));
+		cameraIndex++;
 		break;
+	}
 	case '.':
-		camera.speedUp(); // speed up camera
+	{
+		cameraIdentity.push_back(Camera::speedUp(cameraIdentity[cameraIndex]));
+		cameraIndex++;
 		break;
 		// these are all camera controls
+	}
 	case 'w':
 		controls.forward = true;
 		break;

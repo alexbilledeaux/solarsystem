@@ -11,23 +11,33 @@ class Camera
 {
 private:
 	// a vector pointing in the directio nyoure facing
-	float forwardVec[3];
+	const float forwardVec[3];
 
 	// a vector pointing to the right of where your facing (to describe orientation
-	float rightVec[3];
+	const float rightVec[3];
 
 	// a vector pointing upwards from where youre facing
-	float upVec[3];
+	const float upVec[3];
 
 	// a vector describing the position of the camera
-	float position[3];
+	const float position[3];
 
 	// the camera speed
-	float cameraSpeed;
+	const float cameraSpeed;
 	float cameraTurnSpeed;
 
 public:
 	Camera(void);
+
+	Camera(float, float, float[3], float[3], float[3], float[3]);
+
+	static float* getPosition(Camera);
+
+	static float* getForwardVector(Camera);
+
+	static float* getRightVector(Camera);
+
+	static float* getUpVector(Camera);
 
 	// transform the opengl view matrix for the orientation
 	void transformOrientation(void);
@@ -36,43 +46,44 @@ public:
 	void transformTranslation(void);
 
 	// points the camera at the given point in 3d space
-	void pointAt(float* targetVec);
+	static Camera pointAt(float* targetVec, Camera);
 
 	// speed up the camera speed
-	void speedUp(void);
+	static Camera speedUp(Camera);
 
 	// slow down the camera speed
-	void slowDown(void);
+	static Camera slowDown(Camera);
 
 	// move the camera forward
-	void forward(void);
+	static Camera forward(Camera);
 
 	// strafe left
-	void left(void);
+	static Camera left(Camera);
 
 	// strafe right
-	void right(void);
+	static Camera right(Camera);
 
 	// move the camera backward
-	void backward(void);
+	static Camera backward(Camera);
 
 	// roll the camera to the right
-	void rollRight(void);
+	static Camera rollRight(Camera);
 
 	// roll the camera to the left
-	void rollLeft(void);
+	static Camera rollLeft(Camera);
 
 	// pitch the camera up
-	void pitchUp(void);
+	static Camera pitchUp(Camera);
 
 	// pitch the camera down
-	void pitchDown(void);
+	static Camera pitchDown(Camera);
 
 	// yaw left
-	void yawLeft(void);
+	static Camera yawLeft(Camera);
 
 	// yaw right
-	void yawRight(void);
+	static Camera yawRight(Camera);
+
 };
 
 #endif

@@ -11,6 +11,7 @@ See LICENSE.TXT*/
 #include <gl\GLU.h>
 #include <cmath>
 #include "camera.h"
+#include <iostream>
 
 
 // my camera system i envisioned to be controlled kinda like a spaceship
@@ -106,18 +107,29 @@ void rotateAroundVec(float* v1, float* v2, float angle, float* v3)
 }
 
 Camera::Camera(void)
+	:	cameraSpeed{ 0.005f },
+		position { 0.764331460f, -1.66760659f, 0.642456770 },
+		forwardVec { -0.398769796f, 0.763009906f, -0.508720219f },
+		rightVec { 0.886262059f, 0.463184059f, 0.000000000f },
+		upVec { -0.235630989f, 0.450859368f, 0.860931039f }
 {
-	cameraSpeed = 0.005f;
 	cameraTurnSpeed = 0.01f;
 	// set default vector values - obtained a nice viewing angle of the planets, got values using the debugger
 	/*		forwardVec	0x00ab354c {-0.398769796, 0.763009906, -0.508720219}	float[3]
 +		upVec	0x00ab3564 {-0.235630989, 0.450859368, 0.860931039}	float[3]
 +		rightVec	0x00ab3558 {0.886262059, 0.463184059, 0.000000000}	float[3]
 +		position	0x00ab3570 {0.764331460, -1.66760659, 0.642456770}	float[3] */
-	vectorSet(position, 0.764331460f, -1.66760659f, 0.642456770);
-	vectorSet(forwardVec,-0.398769796f, 0.763009906f, -0.508720219f);
-	vectorSet(rightVec, 0.886262059f, 0.463184059f, 0.000000000f);
-	vectorSet(upVec, -0.235630989f, 0.450859368f, 0.860931039f);
+}
+
+Camera::Camera(float speed, float turnSpeed, float pos[3], float fvector[3], float rvector[3], float uvector[3])
+	:	cameraSpeed{ speed },
+		position { pos[0], pos[1], pos[2] },
+		forwardVec { fvector[0], fvector[1], fvector[2] },
+		rightVec { rvector[0], rvector[1], rvector[2] },
+		upVec { uvector[0], uvector[1], uvector[2] }
+{
+	std::cout << "Constructor Fired: " << pos[0] << " | " << pos[1] << " | " << pos[2] << "\n";
+	cameraTurnSpeed = turnSpeed;
 }
 
 // transform the opengl view matrix for the camera
@@ -135,162 +147,240 @@ void Camera::transformTranslation(void)
 }
 
 // points the camera at the given point in 3d space
-void Camera::pointAt(float* targetVec)
+Camera Camera::pointAt(float* targetVec, Camera camera)
 {
 	float tempVec[3];
 	float up[3] = { 0.0f, 0.0f, 1.0f };
 
+	float fvector[3];
+	float rvector[3];
+	float uvector[3];
 	// first work out the new forward vector by subtracting the target position from the camera position
-	forwardVec[0] = targetVec[0] - position[0];
-	forwardVec[1] = targetVec[1] - position[1];
-	forwardVec[2] = targetVec[2] - position[2];
+	fvector[0] = targetVec[0] - camera.position[0];
+	fvector[1] = targetVec[1] - camera.position[1];
+	fvector[2] = targetVec[2] - camera.position[2];
 	// then normalise it to 1 length
-	normaliseVec(forwardVec);
+	normaliseVec(fvector);
 
 	// now to find the right vector we rotate the forward vector -pi/2 around the z axis
-	rotateAroundVec(forwardVec, up, -1.57079632679f, tempVec);
+	rotateAroundVec(fvector, up, -1.57079632679f, tempVec);
 	// and remove the y component to make it flat
 	tempVec[2] = 0;
 	// then normalise it
 	normaliseVec(tempVec);
 	// and assign it to rightVec
-	vectorCopy(rightVec, tempVec);
+	vectorCopy(rvector, tempVec);
 
 	// now work out the upvector by rotating the forward vector pi/2 around the rightvector
-	rotateAroundVec(forwardVec, rightVec, 1.57079632679f, tempVec);
-	vectorCopy(upVec, tempVec);
+	rotateAroundVec(fvector, rvector, 1.57079632679f, tempVec);
+	vectorCopy(uvector, tempVec);
+
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, Camera::getPosition(camera), fvector, rvector, uvector);
+	return updatedCamera;
 }
 
 // speed up the camera speed
-void Camera::speedUp(void)
+Camera Camera::speedUp(Camera camera)
 {
-	if (cameraSpeed < 1.0f)
-		cameraSpeed *= 2;
+	if (camera.cameraSpeed < 1.0f)
+	{
+		Camera updatedCamera = Camera(camera.cameraSpeed * 2, camera.cameraTurnSpeed, Camera::getPosition(camera), Camera::getForwardVector(camera), Camera::getRightVector(camera), Camera::getUpVector(camera));
+		return updatedCamera;
+	}
+	else
+	{
+		return camera;
+	}
 }
 
 // slow down the camera speed
-void Camera::slowDown(void)
+Camera Camera::slowDown(Camera camera)
 {
-	if (cameraSpeed > 0.000001f)
-		cameraSpeed /= 2;
+
+	if (camera.cameraSpeed > 0.000001f)
+	{
+		Camera updatedCamera = Camera(camera.cameraSpeed / 2, camera.cameraTurnSpeed, Camera::getPosition(camera), Camera::getForwardVector(camera), Camera::getRightVector(camera), Camera::getUpVector(camera));
+		return updatedCamera;
+	}
+	else
+	{
+		return camera;
+	}
 }
 
 // move the camera forward
-void Camera::forward(void)
+Camera Camera::forward(Camera camera)
 {
 	// make a movement vector the right speed facing the forward direction
-	float vec[3];
-	vectorCopy(vec, forwardVec);
-	vectorMul(vec, cameraSpeed);
+	float newPosition[3];
+	vectorCopy(newPosition, Camera::getForwardVector(camera));
+	vectorMul(newPosition, camera.cameraSpeed);
+	vectorAdd(newPosition, Camera::getPosition(camera));
 
 	// add the movement vec to the position vec
-	vectorAdd(position, vec);
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, newPosition, Camera::getForwardVector(camera), Camera::getRightVector(camera), Camera::getUpVector(camera));
+	return updatedCamera;
 }
 
 // move the camera backward
-void Camera::backward(void)
+Camera Camera::backward(Camera camera)
 {
 	// make a movement vector the right speed facing the backward direction
-	float vec[3];
-	vectorCopy(vec, forwardVec);
-	vectorMul(vec, -cameraSpeed); // -cameraSpeed for backwards
+	float newPosition[3];
+	vectorCopy(newPosition, Camera::getForwardVector(camera));
+	vectorMul(newPosition, -camera.cameraSpeed); // -cameraSpeed for backwards
+	vectorAdd(newPosition, Camera::getPosition(camera));
 
 	// add the movement vec to the position vec
-	vectorAdd(position, vec);
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, newPosition, Camera::getForwardVector(camera), Camera::getRightVector(camera), Camera::getUpVector(camera));
+	return updatedCamera;
 }
 
 // strafe left
-void Camera::left(void)
+Camera Camera::left(Camera camera)
 {
 	// make a movement vector the right speed facing the left direction
-	float vec[3];
-	vectorCopy(vec, rightVec);
-	vectorMul(vec, -cameraSpeed); // -cameraSpeed for left
+	float newPosition[3];
+	vectorCopy(newPosition, Camera::getRightVector(camera));
+	vectorMul(newPosition, -camera.cameraSpeed); // -cameraSpeed for left
+	vectorAdd(newPosition, Camera::getPosition(camera));
 
 	// add the movement vec to the position vec
-	vectorAdd(position, vec);
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, newPosition, Camera::getForwardVector(camera), Camera::getRightVector(camera), Camera::getUpVector(camera));
+	return updatedCamera;
 }
 
 // strafe right
-void Camera::right(void)
+Camera Camera::right(Camera camera)
 {
 	// make a movement vector the right speed facing the right direction
-	float vec[3];
-	vectorCopy(vec, rightVec);
-	vectorMul(vec, cameraSpeed);
+	float newPosition[3];
+	vectorCopy(newPosition, Camera::getRightVector(camera));
+	vectorMul(newPosition, camera.cameraSpeed);
+	vectorAdd(newPosition, Camera::getPosition(camera));
 
 	// add the movement vec to the position vec
-	vectorAdd(position, vec);
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, newPosition, Camera::getForwardVector(camera), Camera::getRightVector(camera), Camera::getUpVector(camera));
+	return updatedCamera;
 }
 
 // roll the camera to the right
-void Camera::rollRight(void)
+Camera Camera::rollRight(Camera camera)
 {
-	float tempVec[3];
 	// rotate the up and right vectors around the forward vector axis for roll
-	rotateAroundVec(upVec, forwardVec, cameraTurnSpeed, tempVec);
-	vectorCopy(upVec, tempVec);
-	
-	rotateAroundVec(rightVec, forwardVec, cameraTurnSpeed, tempVec);
-	vectorCopy(rightVec, tempVec);
+	float newUpVec[3];
+	rotateAroundVec(Camera::getUpVector(camera), Camera::getForwardVector(camera), camera.cameraTurnSpeed, newUpVec);
+
+	float newRightVec[3];
+	rotateAroundVec(Camera::getRightVector(camera), Camera::getForwardVector(camera), camera.cameraTurnSpeed, newRightVec);
+
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, Camera::getPosition(camera), Camera::getForwardVector(camera), newRightVec, newUpVec);
+	return updatedCamera;
+
 }
 
 // roll the camera to the left
-void Camera::rollLeft(void)
+Camera Camera::rollLeft(Camera camera)
 {
-	float tempVec[3];
 	// rotate the up and right vectors around the forward vector axis for roll
-	rotateAroundVec(upVec, forwardVec, -cameraTurnSpeed, tempVec);
-	vectorCopy(upVec, tempVec);
+	float newUpVec[3];
+	rotateAroundVec(Camera::getUpVector(camera), Camera::getForwardVector(camera), -camera.cameraTurnSpeed, newUpVec);
 	
-	rotateAroundVec(rightVec, forwardVec, -cameraTurnSpeed, tempVec);
-	vectorCopy(rightVec, tempVec);
+	float newRightVec[3];
+	rotateAroundVec(Camera::getRightVector(camera), Camera::getForwardVector(camera), -camera.cameraTurnSpeed, newRightVec);
+
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, Camera::getPosition(camera), Camera::getForwardVector(camera), newRightVec, newUpVec);
+	return updatedCamera;
 }
 
 // pitch the camera up
-void Camera::pitchUp(void)
+Camera Camera::pitchUp(Camera camera)
 {
-	float tempVec[3];
 	// rotate the forward and up vectors around the right vector axis for pitch
-	rotateAroundVec(forwardVec, rightVec, cameraTurnSpeed, tempVec);
-	vectorCopy(forwardVec, tempVec);
+	float newForwardVec[3];
+	rotateAroundVec(Camera::getForwardVector(camera), Camera::getRightVector(camera), camera.cameraTurnSpeed, newForwardVec);
 	
-	rotateAroundVec(upVec, rightVec, cameraTurnSpeed, tempVec);
-	vectorCopy(upVec, tempVec);
+	float newUpVec[3];
+	rotateAroundVec(Camera::getUpVector(camera), Camera::getRightVector(camera), camera.cameraTurnSpeed, newUpVec);
+
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, Camera::getPosition(camera), newForwardVec, Camera::getRightVector(camera), newUpVec);
+	return updatedCamera;
 }
 
 // pitch the camera down
-void Camera::pitchDown(void)
+Camera Camera::pitchDown(Camera camera)
 {
-	float tempVec[3];
 	// rotate the forward and up vectors around the right vector axis for pitch
-	rotateAroundVec(forwardVec, rightVec, -cameraTurnSpeed, tempVec);
-	vectorCopy(forwardVec, tempVec);
+	float newForwardVec[3];
+	rotateAroundVec(Camera::getForwardVector(camera), Camera::getRightVector(camera), -camera.cameraTurnSpeed, newForwardVec);
 	
-	rotateAroundVec(upVec, rightVec, -cameraTurnSpeed, tempVec);
-	vectorCopy(upVec, tempVec);
+	float newUpVec[3];
+	rotateAroundVec(Camera::getUpVector(camera), Camera::getRightVector(camera), -camera.cameraTurnSpeed, newUpVec);
+
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, Camera::getPosition(camera), newForwardVec, Camera::getRightVector(camera), newUpVec);
+	return updatedCamera;
 }
 
 // yaw left
-void Camera::yawLeft(void)
+Camera Camera::yawLeft(Camera camera)
 {
-	float tempVec[3];
 	// rotate the forward and right vectors around the up vector axis for yaw
-	rotateAroundVec(forwardVec, upVec, cameraTurnSpeed, tempVec);
-	vectorCopy(forwardVec, tempVec);
+	float newForwardVec[3];
+	rotateAroundVec(Camera::getForwardVector(camera), Camera::getUpVector(camera), camera.cameraTurnSpeed, newForwardVec);
 	
-	rotateAroundVec(rightVec, upVec, cameraTurnSpeed, tempVec);
-	vectorCopy(rightVec, tempVec);
+	float newRightVec[3];
+	rotateAroundVec(Camera::getRightVector(camera), Camera::getUpVector(camera), camera.cameraTurnSpeed, newRightVec);
+
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, Camera::getPosition(camera), newForwardVec, newRightVec, Camera::getUpVector(camera));
+	return updatedCamera;
 }
 
 // yaw right
-void Camera::yawRight(void)
+Camera Camera::yawRight(Camera camera)
 {
-	float tempVec[3];
 	// rotate the forward and right vectors around the up vector axis for yaw
-	rotateAroundVec(forwardVec, upVec, -cameraTurnSpeed, tempVec);
-	vectorCopy(forwardVec, tempVec);
+	float newForwardVec[3];
+	rotateAroundVec(Camera::getForwardVector(camera), Camera::getUpVector(camera), -camera.cameraTurnSpeed, newForwardVec);
 	
-	rotateAroundVec(rightVec, upVec, -cameraTurnSpeed, tempVec);
-	vectorCopy(rightVec, tempVec);
+	float newRightVec[3];
+	rotateAroundVec(Camera::getRightVector(camera), Camera::getUpVector(camera), -camera.cameraTurnSpeed, newRightVec);
+
+	Camera updatedCamera = Camera(camera.cameraSpeed, camera.cameraTurnSpeed, Camera::getPosition(camera), newForwardVec, newRightVec, Camera::getUpVector(camera));
+	return updatedCamera;
+}
+
+float* Camera::getPosition(Camera camera)
+{
+	static float vec[3];
+	vec[0] = camera.position[0];
+	vec[1] = camera.position[1];
+	vec[2] = camera.position[2];
+	return vec;
+}
+
+float* Camera::getForwardVector(Camera camera)
+{
+	static float vec[3];
+	vec[0] = camera.forwardVec[0];
+	vec[1] = camera.forwardVec[1];
+	vec[2] = camera.forwardVec[2];
+	return vec;
+}
+
+float* Camera::getRightVector(Camera camera)
+{
+	static float vec[3];
+	vec[0] = camera.rightVec[0];
+	vec[1] = camera.rightVec[1];
+	vec[2] = camera.rightVec[2];
+	return vec;
+}
+
+float* Camera::getUpVector(Camera camera)
+{
+	static float vec[3];
+	vec[0] = camera.upVec[0];
+	vec[1] = camera.upVec[1];
+	vec[2] = camera.upVec[2];
+	return vec;
 }
