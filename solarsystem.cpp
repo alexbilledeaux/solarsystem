@@ -11,33 +11,38 @@ SolarSystem::SolarSystem()
 	
 }
 
-// calculate the positions and logic of all planets
-void SolarSystem::calculatePositions(float time)
+// calculate the positions of all planets and add a new state to their identities
+void SolarSystem::calculatePositions(float time, int observerIndex)
 {
-	for (int i = 0; i < planets.size(); i++)
+	for (int i = 0; i < planetIdentities.size(); i++)
 	{
-		planets[i].calculatePosition(time);
+		Planet planetAtNewPosition = Planet::calculatePosition(time, planetIdentities[i][observerIndex]);
+		// Add new state to planet identity
+		planetIdentities[i].push_back(planetAtNewPosition);
 	}
 }
 
-// Add a planet with the given data
-void SolarSystem::addPlanet(float distanceFromSun, float orbitTime, float rotationTime, float radius, GLuint textureHandle)
+// Add a planet identity and initial state
+void SolarSystem::addPlanetIdentity(float distanceFromSun, float orbitTime, float rotationTime, float radius, GLuint textureHandle)
 {
-	planets.push_back(Planet(distanceFromSun, orbitTime, rotationTime, radius, textureHandle));
+	std::vector<Planet> planetIdentity = std::vector<Planet>();
+	planetIdentity.push_back(Planet(distanceFromSun, orbitTime, rotationTime, radius, textureHandle));
+	planetIdentities.push_back(planetIdentity);
 }
 
 // Add a moon to the specified planet
-void SolarSystem::addMoon(int planetIndex, float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle)
+void SolarSystem::addMoon(int identityIndex, float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle)
 {
-	planets[planetIndex].addMoon(distanceFromPlanet, orbitTime, rotationTime, radius, textureHandle);
+	Planet newState = Planet::addMoon(planetIdentities[identityIndex].back(), distanceFromPlanet, orbitTime, rotationTime, radius, textureHandle);
+	planetIdentities[identityIndex].push_back(newState);
 }
 
 // render the planets with opengl
-void SolarSystem::render()
+void SolarSystem::render(int observerIndex)
 {
-	for (int i = 0; i < planets.size(); i++)
+	for (int i = 0; i < planetIdentities.size(); i++)
 	{
-		planets[i].render();
+		Planet::render(planetIdentities[i][observerIndex]);
 	}
 }
 
@@ -45,21 +50,26 @@ void SolarSystem::render()
 // render the drawing of the orbits
 void SolarSystem::renderOrbits()
 {
-	for (int i = 0; i < planets.size(); i++)
+	for (int i = 0; i < planetIdentities.size(); i++)
 	{
-		planets[i].renderOrbit();
+		Planet::renderOrbit(planetIdentities[i][0]);
 	}
 }
 
 // get the position in 3d space units of the given planet (specified by its index in the list) and put it into the 3d vector vec
 void SolarSystem::getPlanetPosition(int index, float* vec)
 {
-	planets[index].getPosition(vec);
+	Planet::getPosition(vec, planetIdentities[index].back());
 }
 
 
 // get the radius of the planet at the given index in the planets list
 float SolarSystem::getRadiusOfPlanet(int index)
 {
-	return planets[index].getRadius();
+	return planetIdentities[index][0].getRadius();
+}
+
+int SolarSystem::getPlanetIdentitySize(int index)
+{
+	return planetIdentities[index].size();
 }

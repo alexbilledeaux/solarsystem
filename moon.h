@@ -16,37 +16,39 @@ class Moon
 {
 private:
 	// distance from its planet
-	float distanceFromPlanet;
+	const float distanceFromPlanet;
 
 	// time it takes to complete 1 orbit
-	float orbitTime;
+	const float orbitTime;
 
 	// time it takes to spin 360 degrees
-	float rotationTime;
+	const float rotationTime;
 
 	// radius of the moon itself
-	float radius;
+	const float radius;
 
 	// the texture used for rendering
-	GLuint textureHandle;
+	const GLuint textureHandle;
 
 	// its position in 3d space relative to the planet
-	float position[3];
+	const float position[3];
 	// its rotation around its axis
-	float rotation;
+	const float rotation;
 
 public:
 	// Distance is in units of km (kilometers) and time is in units of earth days
+	Moon(float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle, float[3], float rotation);
+
 	Moon(float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle);
 
 	// Calculate its position in 3d space relative to the planet in the orbit using the given time value
-	void calculatePosition(float time);
+	static Moon calculatePosition(float time, Moon moon);
 
 	// Render it to the screen
-	void render(void);
+	static void render(Moon moon);
 
 	// render this moons orbit circle
-	void renderOrbit(void);
+	static void renderOrbit(Moon moon);
 };
 
 #endif

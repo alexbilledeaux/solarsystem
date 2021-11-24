@@ -38,6 +38,9 @@ SolarSystem solarSystem;
 Camera camera;
 std::vector<Camera> cameraIdentity;
 int cameraIndex = 0;
+std::vector<int> planetObserverIndex{0,0,0,0,0,0,0,0,0,0};
+int planetIndex = 0;
+bool reverse = false;
 
 // These control the simulation of time
 double time;
@@ -125,16 +128,16 @@ void init(void)
 	TGA* pluto = new TGA("images/pluto.tga");
 
 	// Add all the planets with accurate data. Distance measured in km, time measured in earth days.
-	solarSystem.addPlanet(0, 1, 500, 695500, sun->getTextureHandle()); // sun
-	solarSystem.addPlanet(57910000, 88, 58.6, 2440, mercury->getTextureHandle()); // mercury
-	solarSystem.addPlanet(108200000, 224.65, 243, 6052, venus->getTextureHandle()); // venus
-	solarSystem.addPlanet(149600000, 365, 1, 6371, earth->getTextureHandle()); // earth
-	solarSystem.addPlanet(227939100, 686, 1.03f, 3389, mars->getTextureHandle()); // mars
-	solarSystem.addPlanet(778500000, 4332, 0.4139, 69911, jupiter->getTextureHandle()); // jupiter
-	solarSystem.addPlanet(1433000000, 10759, 0.44375, 58232, saturn->getTextureHandle()); // saturn
-	solarSystem.addPlanet(2877000000, 30685, 0.718056, 25362, uranus->getTextureHandle()); // uranus
-	solarSystem.addPlanet(4503000000, 60188, 0.6713, 24622, neptune->getTextureHandle()); // neptune
-	solarSystem.addPlanet(5906380000, 90616, 6.39, 1137, pluto->getTextureHandle()); // pluto
+	solarSystem.addPlanetIdentity(0, 1, 500, 695500, sun->getTextureHandle()); // sun
+	solarSystem.addPlanetIdentity(57910000, 88, 58.6, 2440, mercury->getTextureHandle()); // mercury
+	solarSystem.addPlanetIdentity(108200000, 224.65, 243, 6052, venus->getTextureHandle()); // venus
+	solarSystem.addPlanetIdentity(149600000, 365, 1, 6371, earth->getTextureHandle()); // earth
+	solarSystem.addPlanetIdentity(227939100, 686, 1.03f, 3389, mars->getTextureHandle()); // mars
+	solarSystem.addPlanetIdentity(778500000, 4332, 0.4139, 69911, jupiter->getTextureHandle()); // jupiter
+	solarSystem.addPlanetIdentity(1433000000, 10759, 0.44375, 58232, saturn->getTextureHandle()); // saturn
+	solarSystem.addPlanetIdentity(2877000000, 30685, 0.718056, 25362, uranus->getTextureHandle()); // uranus
+	solarSystem.addPlanetIdentity(4503000000, 60188, 0.6713, 24622, neptune->getTextureHandle()); // neptune
+	solarSystem.addPlanetIdentity(5906380000, 90616, 6.39, 1137, pluto->getTextureHandle()); // pluto
 
 	solarSystem.addMoon(3, 7000000, 27.3, 27.3, 1738, moon->getTextureHandle()); // test moon for the earth
 
@@ -163,7 +166,24 @@ void display(void)
 {
 	// update the logic and simulation
 	time += timeSpeed;
-	solarSystem.calculatePositions(time);
+	solarSystem.calculatePositions(time, planetIndex);
+
+	if (reverse && planetIndex > 0)
+	{
+		planetIndex--;
+	}
+	else if (!reverse)
+	{
+		planetIndex++;
+	}
+
+	for (int i = 0; i < planetObserverIndex.size(); i++)
+	{
+		if (planetObserverIndex[i] == solarSystem.getPlanetIdentitySize(i))
+		{
+			planetObserverIndex[i]++;
+		}
+	}
 
 	if (controls.forward)
 	{
@@ -257,7 +277,7 @@ void display(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 
-	solarSystem.render();
+	solarSystem.render(planetIndex);
 	glDisable(GL_LIGHTING);
 
 	// possibly render orbits
@@ -322,7 +342,12 @@ void keyDown(unsigned char key, int x, int y)
 		showOrbits = !showOrbits; // toggle show orbits
 		break;
 	case 'm':
+	{
 		addMoon(); // add a moon to the selected planet
+		break;
+	}
+	case 'p':
+		reverse = !reverse;
 		break;
 	case 'r':
 		planetSizeScale = distanceScale;

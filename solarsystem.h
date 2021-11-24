@@ -18,22 +18,22 @@ See LICENSE.TXT*/
 class SolarSystem
 {
 private:
-	std::vector<Planet> planets;
+	std::vector<std::vector<Planet>> planetIdentities;
 
 public:
 	SolarSystem();
 
-	// calculate the positions and logic of all planets
-	void calculatePositions(float time);
+	// calculate the positions of all planets and add a new state to their identities
+	void calculatePositions(float time, int observerIndex);
 	
-	// Add a planet with the given data
-	void addPlanet(float distanceFromSun, float orbitTime, float rotationTime, float radius, GLuint textureHandle);
+	// Add a planet identity and initial state
+	void addPlanetIdentity(float distanceFromSun, float orbitTime, float rotationTime, float radius, GLuint textureHandle);
 
 	// Add a moon to the specified planet
-	void addMoon(int planetIndex, float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle);
+	void addMoon(int identityIndex, float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle);
 
 	// render the planets with opengl
-	void render();
+	void render(int observerIndex);
 
 	// render the drawing of the orbits
 	void renderOrbits();
@@ -43,6 +43,8 @@ public:
 
 	// get the radius of the planet at the given index in the planets list
 	float getRadiusOfPlanet(int index);
+
+	int getPlanetIdentitySize(int index);
 };
 
 #endif

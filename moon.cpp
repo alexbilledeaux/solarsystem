@@ -16,53 +16,68 @@ See LICENSE.TXT*/
 #include "globals.h"
 
 Moon::Moon(float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle)
-{
-	this->distanceFromPlanet = distanceFromPlanet;
-	this->orbitTime = orbitTime;
-	this->rotationTime = rotationTime;
-	this->radius = radius;
-	this->textureHandle = textureHandle;
-}
+	: distanceFromPlanet{ distanceFromPlanet },
+	orbitTime { orbitTime },
+	rotationTime { rotationTime },
+	radius { radius },
+	textureHandle { textureHandle },
+	position { 0.00, 0.00, 0.00 },
+	rotation { 0.00 }
+{}
+
+Moon::Moon(float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle, float position[3], float rotation )
+	:	distanceFromPlanet { distanceFromPlanet },
+		orbitTime { orbitTime },
+		rotationTime { rotationTime },
+		radius { radius },
+		textureHandle { textureHandle },
+		position { position[0], position[1], position[2] },
+		rotation { rotation }
+{}
 
 // Calculate its position in 3d space relative to the planet in the orbit using the given time value
-void Moon::calculatePosition(float time)
+Moon Moon::calculatePosition(float time, Moon moon)
 {
 	// find the angle of orientation of the orbit around the planet
-	float angle = time * 3.1419f / orbitTime;
+	float angle = time * 3.1419f / moon.orbitTime;
 	
 	// use trig to find the position in space relative to the planet
-	position[0] = sin(angle) * distanceFromPlanet;
-	position[1] = cos(angle) * distanceFromPlanet;
-	position[2] = 0;
+	float pos[3];
+	pos[0] = sin(angle) * moon.distanceFromPlanet;
+	pos[1] = cos(angle) * moon.distanceFromPlanet;
+	pos[2] = 0;
 
 	// find the rotation of the moon around its axis
-	rotation = time * 360 / rotationTime;
+	float rotation = time * 360 / moon.rotationTime;
+
+	Moon newMoon = Moon(moon.distanceFromPlanet, moon.orbitTime, moon.rotationTime, moon.radius, moon.textureHandle, pos, rotation);
+	return newMoon;
 }
 
 // Render it to the screen
-void Moon::render(void)
+void Moon::render(Moon moon)
 {
 	glPushMatrix();
 
 	// bind the moons texture
-	glBindTexture(GL_TEXTURE_2D, textureHandle);
+	glBindTexture(GL_TEXTURE_2D, moon.textureHandle);
 
 	// translate to the right positon and rotate for the moons spinning
-	glTranslatef(position[0] * distanceScale, position[1] * distanceScale, position[2] * distanceScale);
-	glRotatef(-rotation, 0.0f, 0.0f, 1.0f);
+	glTranslatef(moon.position[0] * distanceScale, moon.position[1] * distanceScale, moon.position[2] * distanceScale);
+	glRotatef(-moon.rotation, 0.0f, 0.0f, 1.0f);
 	
 	// render as a GLU sphere quadric object
 	GLUquadricObj* quadric = gluNewQuadric();
 	gluQuadricTexture(quadric, true);
 	gluQuadricNormals(quadric, GLU_SMOOTH);
 
-	gluSphere(quadric, radius * planetSizeScale, 30, 30);
+	gluSphere(quadric, moon.radius * planetSizeScale, 30, 30);
 
 	glPopMatrix();
 }
 
 // render this planets orbit circle
-void Moon::renderOrbit(void)
+void Moon::renderOrbit(Moon moon)
 {
 	// draw a line strip
 	glBegin(GL_LINE_STRIP);
@@ -70,9 +85,9 @@ void Moon::renderOrbit(void)
 	// loop round from 0 to 2*PI and draw around the radius of the orbit using trigonometry
 	for (float angle = 0.0f; angle < 6.283185307f; angle += 0.1f)
 	{
-		glVertex3f(sin(angle) * distanceFromPlanet * distanceScale, cos(angle) * distanceFromPlanet * distanceScale, 0.0f);
+		glVertex3f(sin(angle) * moon.distanceFromPlanet * distanceScale, cos(angle) * moon.distanceFromPlanet * distanceScale, 0.0f);
 	}
-	glVertex3f(0.0f, distanceFromPlanet * distanceScale, 0.0f);
+	glVertex3f(0.0f, moon.distanceFromPlanet * distanceScale, 0.0f);
 
 	glEnd();
 }
