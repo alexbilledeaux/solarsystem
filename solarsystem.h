@@ -35,6 +35,9 @@ public:
 	// render the planets with opengl
 	void render(int observerIndex);
 
+	// render a planet with opengl by its index
+	void renderPlanet(int identityIndex, int observerIndex);
+
 	// render the drawing of the orbits
 	void renderOrbits();
 

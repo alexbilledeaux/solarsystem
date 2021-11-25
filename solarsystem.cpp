@@ -46,6 +46,11 @@ void SolarSystem::render(int observerIndex)
 	}
 }
 
+void SolarSystem::renderPlanet(int identityIndex, int observerIndex)
+{
+	Planet::render(planetIdentities[identityIndex][observerIndex]);
+}
+
 
 // render the drawing of the orbits
 void SolarSystem::renderOrbits()

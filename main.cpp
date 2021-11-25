@@ -38,9 +38,7 @@ SolarSystem solarSystem;
 Camera camera;
 std::vector<Camera> cameraIdentity;
 int cameraIndex = 0;
-std::vector<int> planetObserverIndex{0,0,0,0,0,0,0,0,0,0};
-int planetIndex = 0;
-bool reverse = false;
+std::vector<int> planetObserverIndex{1,1,1,1,1,1,1,1,1,1};
 
 // These control the simulation of time
 double time;
@@ -139,7 +137,7 @@ void init(void)
 	solarSystem.addPlanetIdentity(4503000000, 60188, 0.6713, 24622, neptune->getTextureHandle()); // neptune
 	solarSystem.addPlanetIdentity(5906380000, 90616, 6.39, 1137, pluto->getTextureHandle()); // pluto
 
-	solarSystem.addMoon(3, 7000000, 27.3, 27.3, 1738, moon->getTextureHandle()); // test moon for the earth
+	//solarSystem.addMoon(3, 7000000, 27.3, 27.3, 1738, moon->getTextureHandle()); // test moon for the earth
 
 	// set up time
 	time = 2.552f;
@@ -166,24 +164,7 @@ void display(void)
 {
 	// update the logic and simulation
 	time += timeSpeed;
-	solarSystem.calculatePositions(time, planetIndex);
-
-	if (reverse && planetIndex > 0)
-	{
-		planetIndex--;
-	}
-	else if (!reverse)
-	{
-		planetIndex++;
-	}
-
-	for (int i = 0; i < planetObserverIndex.size(); i++)
-	{
-		if (planetObserverIndex[i] == solarSystem.getPlanetIdentitySize(i))
-		{
-			planetObserverIndex[i]++;
-		}
-	}
+	solarSystem.calculatePositions(time, solarSystem.getPlanetIdentitySize(0) - 1);
 
 	if (controls.forward)
 	{
@@ -277,7 +258,16 @@ void display(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 
-	solarSystem.render(planetIndex);
+	//solarSystem.render(planetIndex);
+	for (int i = 0; i < planetObserverIndex.size(); i++)
+	{
+		solarSystem.renderPlanet(i, planetObserverIndex[i]);
+		if (planetObserverIndex[i] == solarSystem.getPlanetIdentitySize(i) - 1)
+		{
+			planetObserverIndex[i]++;
+		}
+	}
+
 	glDisable(GL_LIGHTING);
 
 	// possibly render orbits
@@ -346,9 +336,16 @@ void keyDown(unsigned char key, int x, int y)
 		addMoon(); // add a moon to the selected planet
 		break;
 	}
-	case 'p':
-		reverse = !reverse;
+	case 'x':
+	{
+		planetObserverIndex[planetSelected] = planetObserverIndex[planetSelected] - 1; // observe the current index of the selected planet
 		break;
+	}
+	case 'c':
+	{
+		planetObserverIndex[planetSelected] = solarSystem.getPlanetIdentitySize(0); // observe the newest state of the selected planet
+		break;
+	}
 	case 'r':
 		planetSizeScale = distanceScale;
 		break;
