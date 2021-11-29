@@ -36,7 +36,7 @@ Planet::Planet(float distanceFromSun, float orbitTime, float rotationTime, float
 		rotationTime { rotationTime },
 		orbitTime { orbitTime },
 		distanceFromSun { distanceFromSun },
-	moons{ moons }
+		moons{ moons }
 {}
 
 // Calculate its position in 3d spacein the orbit using the given time value

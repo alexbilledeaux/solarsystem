@@ -38,11 +38,12 @@ SolarSystem solarSystem;
 Camera camera;
 std::vector<Camera> cameraIdentity;
 int cameraIndex = 0;
-std::vector<int> planetObserverIndex{1,1,1,1,1,1,1,1,1,1};
+std::vector<int> planetObserverIndex{ 1,1,1,1,1,1,1,1,1,1 };
 
 // These control the simulation of time
 double time;
 double timeSpeed;
+bool reverse = false;
 
 // holds the state of the controls for the camera - when true, the key for that control is being pressed
 struct ControlStates
@@ -165,6 +166,7 @@ void display(void)
 	// update the logic and simulation
 	time += timeSpeed;
 	solarSystem.calculatePositions(time, solarSystem.getPlanetIdentitySize(0) - 1);
+	
 
 	if (controls.forward)
 	{
@@ -258,14 +260,24 @@ void display(void)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 
-	//solarSystem.render(planetIndex);
 	for (int i = 0; i < planetObserverIndex.size(); i++)
 	{
 		solarSystem.renderPlanet(i, planetObserverIndex[i]);
-		if (planetObserverIndex[i] == solarSystem.getPlanetIdentitySize(i) - 1)
+		if (!reverse)
 		{
-			planetObserverIndex[i]++;
+			if (planetObserverIndex[i] == solarSystem.getPlanetIdentitySize(i) - 1)
+			{
+				planetObserverIndex[i]++;
+			}
 		}
+		else
+		{
+			if (planetObserverIndex[i] > 1)
+			{
+				planetObserverIndex[i]--;
+			}
+		}
+
 	}
 
 	glDisable(GL_LIGHTING);
@@ -340,6 +352,15 @@ void keyDown(unsigned char key, int x, int y)
 	case 'x':
 	{
 		planetObserverIndex[planetSelected] = planetObserverIndex[planetSelected] - 1; // observe the current index of the selected planet
+		break;
+	}
+	case 'z':
+	{
+		for (int i = 0; i < planetObserverIndex.size(); i++)
+		{
+			planetObserverIndex[i] = solarSystem.getPlanetIdentitySize(i);
+		}
+		reverse = !reverse;
 		break;
 	}
 	case 'c':
