@@ -36,7 +36,7 @@ Planet::Planet(float distanceFromSun, float orbitTime, float rotationTime, float
 		rotationTime { rotationTime },
 		orbitTime { orbitTime },
 		distanceFromSun { distanceFromSun },
-		moons { moons }
+	moons{ moons }
 {}
 
 // Calculate its position in 3d spacein the orbit using the given time value
@@ -54,13 +54,14 @@ Planet Planet::calculatePosition(float time, Planet planet)
 	// find the rotation of the planet around its axis
 	float rot = time * 360 / planet.rotationTime;
 
+	std::vector<Moon> moons;
 	// calculate positions of moons
 	for (int i = 0; i < planet.moons.size(); i++)
 	{
-		Moon::calculatePosition(time, planet.moons[i]);
+		moons.push_back(Moon::calculatePosition(time, planet.moons[i]));
 	}
 
-	Planet newPlanet = Planet(planet.distanceFromSun, planet.orbitTime, planet.rotationTime, planet.radius, planet.textureHandle, pos, rot, planet.moons);
+	Planet newPlanet = Planet(planet.distanceFromSun, planet.orbitTime, planet.rotationTime, planet.radius, planet.textureHandle, pos, rot, moons);
 	return newPlanet;
 }
 

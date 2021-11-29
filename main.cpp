@@ -334,6 +334,7 @@ void keyDown(unsigned char key, int x, int y)
 	case 'm':
 	{
 		addMoon(); // add a moon to the selected planet
+		planetObserverIndex[planetSelected] = solarSystem.getPlanetIdentitySize(planetSelected);
 		break;
 	}
 	case 'x':
@@ -343,7 +344,7 @@ void keyDown(unsigned char key, int x, int y)
 	}
 	case 'c':
 	{
-		planetObserverIndex[planetSelected] = solarSystem.getPlanetIdentitySize(0); // observe the newest state of the selected planet
+		planetObserverIndex[planetSelected] = solarSystem.getPlanetIdentitySize(planetSelected); // observe the newest state of the selected planet
 		break;
 	}
 	case 'r':

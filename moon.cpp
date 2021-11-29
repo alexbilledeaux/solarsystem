@@ -6,6 +6,7 @@ See LICENSE.TXT*/
 
 #include "moon.h"
 #include <cmath>
+#include <iostream>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -16,13 +17,13 @@ See LICENSE.TXT*/
 #include "globals.h"
 
 Moon::Moon(float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle)
-	: distanceFromPlanet{ distanceFromPlanet },
-	orbitTime { orbitTime },
-	rotationTime { rotationTime },
-	radius { radius },
-	textureHandle { textureHandle },
-	position { 0.00, 0.00, 0.00 },
-	rotation { 0.00 }
+	:	distanceFromPlanet{ distanceFromPlanet },
+		orbitTime { orbitTime },
+		rotationTime { rotationTime },
+		radius { radius },
+		textureHandle { textureHandle },
+		position { 0.00, 0.00, 0.00 },
+		rotation { 0.00 }
 {}
 
 Moon::Moon(float distanceFromPlanet, float orbitTime, float rotationTime, float radius, GLuint textureHandle, float position[3], float rotation )
