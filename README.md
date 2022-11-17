@@ -5,7 +5,7 @@ This project is a 3D OpenGL C++ Solar System Simulator, originally created by [R
 
 The following image is from the same Are We There Yet? talk mentioned above.
 
-![Epochal Time Model] (https://donnywinston.com/img/hickey_are-we-there-yet_epochal-time-model.jpg)
+![Epochal Time Model](https://donnywinston.com/img/hickey_are-we-there-yet_epochal-time-model.jpg)
 
 The idea of the epochal time model is to capture the passage of time as an attribute in software. Instead of modifying objects (and permentantly losing the original information) any time we would modify an object we instead clone it with the updated value and append it to an ever growing array that represents the object. With this model, we can access the object at any point in its history. We never lose any data.
 
